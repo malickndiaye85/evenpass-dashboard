@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvenPass - Dashboard Organisateur</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF6B35;
+            --primary-dark: #E85D2F;
+            --primary-light: #FF8559;
+            --secondary: #004E89;
+            --secondary-light: #1A6FAC;
+            --accent: #FFC857;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --dark: #0F172A;
+            --dark-secondary: #1E293B;
+            --dark-tertiary: #334155;
+            --light: #F8FAFC;
+            --light-secondary: #F1F5F9;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+            --text-tertiary: #64748B;
+            --border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 107, 53, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 78, 137, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255, 200, 87, 0.05) 0%, transparent 50%);
+            animation: backgroundPulse 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes backgroundPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 3rem;
+            animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-tertiary);
+            margin-bottom: 0.75rem;
+            padding: 0 1rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+            background: var(--glass-bg);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+
+        .nav-item.active::before {
+            opacity: 0.1;
+        }
+
+        .nav-icon {
+            font-size: 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-label {
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+        }
+
+        .header-left h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #FFFFFF, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-bar input {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            width: 280px;
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            font-size: 1.1rem;
+        }
+
+        .notification-btn, .profile-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .notification-btn:hover, .profile-btn:hover {
+            background: var(--glass-border);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--error);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border: 2px solid var(--dark);
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.75rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+
+        .kpi-card:nth-child(1) { animation-delay: 0.1s; }
+        .kpi-card:nth-child(2) { animation-delay: 0.2s; }
+        .kpi-card:nth-child(3) { animation-delay: 0.3s; }
+        .kpi-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.02));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.2);
+        }
+
+        .kpi-card:hover::before {
+            opacity: 1;
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .kpi-icon.revenue {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        }
+
+        .kpi-icon.tickets {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+        }
+
+        .kpi-icon.events {
+            background: linear-gradient(135deg, var(--accent), #FFD700);
+        }
+
+        .kpi-icon.rate {
+            background: linear-gradient(135deg, var(--success), #34D399);
+        }
+
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .kpi-trend.up {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .kpi-trend.down {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .kpi-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+
+        .kpi-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .kpi-subtitle {
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.75rem;
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s both;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .chart-filters {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border-color: var(--primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Events Table */
+        .events-section {
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.875rem 1.75rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .events-table {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--glass-bg);
+        }
+
+        th {
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.95rem;
+        }
+
+        tr {
+            transition: background 0.3s;
+        }
+
+        tbody tr:hover {
+            background: var(--glass-bg);
+        }
+
+        .event-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .event-image {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .event-details h4 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-date {
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.ended {
+            background: rgba(100, 116, 139, 0.15);
+            color: var(--text-tertiary);
+        }
+
+        .status-badge.upcoming {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--dark-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            transition: width 1s ease-out;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: var(--glass-border);
+            color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1.5rem;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .search-bar input {
+                width: 100%;
+            }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--dark-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.875rem 1.75rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background: var(--glass-border);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">E</div>
+                <div class="logo-text">EvenPass</div>
+            </div>
+
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-title">Menu Principal</div>
+                    <a href="#" class="nav-item active">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-label">Vue d'ensemble</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">🎉</span>
+                        <span class="nav-label">Mes Événements</span>
+                        <span class="nav-badge">12</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">🎫</span>
+                        <span class="nav-label">Billets Vendus</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-label">Participants</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Gestion</div>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">💰</span>
+                        <span class="nav-label">Revenus</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-label">Analytics</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">🔔</span>
+                        <span class="nav-label">Notifications</span>
+                        <span class="nav-badge">5</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">💬</span>
+                        <span class="nav-label">Messages</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Paramètres</div>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-label">Configuration</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">🏦</span>
+                        <span class="nav-label">Compte Bancaire</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        <span class="nav-label">Intégrations</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="nav-icon">❓</span>
+                        <span class="nav-label">Aide & Support</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>Vue d'ensemble</h1>
+                    <p class="header-subtitle">Bienvenue Amadou ! Voici l'état de vos événements</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Rechercher un événement...">
+                    </div>
+                    <button class="notification-btn">
+                        🔔
+                        <span class="notification-badge">5</span>
+                    </button>
+                    <button class="profile-btn">👤</button>
+                </div>
+            </header>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon revenue">💰</div>
+                        <div class="kpi-trend up">
+                            ↑ <span>12.5%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-label">Revenus ce mois</div>
+                    <div class="kpi-value">2 850 000 FCFA</div>
+                    <div class="kpi-subtitle">+320 000 FCFA vs mois dernier</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon tickets">🎫</div>
+                        <div class="kpi-trend up">
+                            ↑ <span>8.3%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-label">Billets vendus</div>
+                    <div class="kpi-value">1 847</div>
+                    <div class="kpi-subtitle">+142 billets ce mois</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon events">🎉</div>
+                        <div class="kpi-trend up">
+                            ↑ <span>3</span>
+                        </div>
+                    </div>
+                    <div class="kpi-label">Événements actifs</div>
+                    <div class="kpi-value">12</div>
+                    <div class="kpi-subtitle">3 nouveaux cette semaine</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon rate">📊</div>
+                        <div class="kpi-trend up">
+                            ↑ <span>5.2%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-label">Taux de remplissage</div>
+                    <div class="kpi-value">78%</div>
+                    <div class="kpi-subtitle">Excellent performance</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <!-- Revenue Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Évolution des Revenus</h3>
+                        <div class="chart-filters">
+                            <button class="filter-btn active">7J</button>
+                            <button class="filter-btn">30J</button>
+                            <button class="filter-btn">3M</button>
+                            <button class="filter-btn">1A</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tickets Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Types de Billets</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="ticketsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Table -->
+            <section class="events-section">
+                <div class="section-header">
+                    <h2 class="section-title">Événements Récents</h2>
+                    <button class="btn-primary" onclick="openModal()">
+                        <span>➕</span>
+                        <span>Créer un événement</span>
+                    </button>
+                </div>
+
+                <div class="events-table">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Événement</th>
+                                    <th>Date</th>
+                                    <th>Lieu</th>
+                                    <th>Billets</th>
+                                    <th>Revenus</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="event-info">
+                                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%23FF6B35' width='64' height='64' rx='12'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='28' fill='white'%3E🎵%3C/text%3E%3C/svg%3E" alt="Event" class="event-image">
+                                            <div class="event-details">
+                                                <h4>Festival Dakar Music</h4>
+                                                <div class="event-date">Créé il y a 3 jours</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>15 Déc 2024</td>
+                                    <td>Stade LSS</td>
+                                    <td>
+                                        <div style="margin-bottom: 0.5rem;">847 / 1000</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 84.7%;"></div>
+                                        </div>
+                                    </td>
+                                    <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600;">1 270 500 FCFA</td>
+                                    <td>
+                                        <span class="status-badge active">
+                                            <span class="status-dot" style="background: var(--success);"></span>
+                                            Actif
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="action-btn" title="Modifier">✏️</button>
+                                            <button class="action-btn" title="Statistiques">📊</button>
+                                            <button class="action-btn" title="Plus">⋯</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="event-info">
+                                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%23004E89' width='64' height='64' rx='12'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='28' fill='white'%3E⚽%3C/text%3E%3C/svg%3E" alt="Event" class="event-image">
+                                            <div class="event-details">
+                                                <h4>Match Lions vs Nigeria</h4>
+                                                <div class="event-date">Créé il y a 5 jours</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>20 Déc 2024</td>
+                                    <td>Stade Abdoulaye Wade</td>
+                                    <td>
+                                        <div style="margin-bottom: 0.5rem;">1 200 / 3000</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 40%;"></div>
+                                        </div>
+                                    </td>
+                                    <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600;">900 000 FCFA</td>
+                                    <td>
+                                        <span class="status-badge upcoming">
+                                            <span class="status-dot" style="background: var(--warning);"></span>
+                                            À venir
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="action-btn" title="Modifier">✏️</button>
+                                            <button class="action-btn" title="Statistiques">📊</button>
+                                            <button class="action-btn" title="Plus">⋯</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="event-info">
+                                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%23FFC857' width='64' height='64' rx='12'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='28' fill='white'%3E🎭%3C/text%3E%3C/svg%3E" alt="Event" class="event-image">
+                                            <div class="event-details">
+                                                <h4>Théâtre National</h4>
+                                                <div class="event-date">Créé il y a 1 semaine</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>18 Déc 2024</td>
+                                    <td>Théâtre Sorano</td>
+                                    <td>
+                                        <div style="margin-bottom: 0.5rem;">300 / 500</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 60%;"></div>
+                                        </div>
+                                    </td>
+                                    <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600;">450 000 FCFA</td>
+                                    <td>
+                                        <span class="status-badge active">
+                                            <span class="status-dot" style="background: var(--success);"></span>
+                                            Actif
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="action-btn" title="Modifier">✏️</button>
+                                            <button class="action-btn" title="Statistiques">📊</button>
+                                            <button class="action-btn" title="Plus">⋯</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="event-info">
+                                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%2310B981' width='64' height='64' rx='12'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='28' fill='white'%3E🎨%3C/text%3E%3C/svg%3E" alt="Event" class="event-image">
+                                            <div class="event-details">
+                                                <h4>Expo Art Contemporain</h4>
+                                                <div class="event-date">Terminé il y a 2 jours</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>02 Déc 2024</td>
+                                    <td>Galerie Nationale</td>
+                                    <td>
+                                        <div style="margin-bottom: 0.5rem;">500 / 500</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 100%;"></div>
+                                        </div>
+                                    </td>
+                                    <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600;">230 000 FCFA</td>
+                                    <td>
+                                        <span class="status-badge ended">
+                                            <span class="status-dot" style="background: var(--text-tertiary);"></span>
+                                            Terminé
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="action-btn" title="Rapport">📄</button>
+                                            <button class="action-btn" title="Statistiques">📊</button>
+                                            <button class="action-btn" title="Plus">⋯</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div class="modal" id="createEventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Créer un nouvel événement</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form>
+                <div class="form-group">
+                    <label class="form-label">Nom de l'événement</label>
+                    <input type="text" class="form-input" placeholder="Ex: Festival Dakar Music 2024">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" placeholder="Décrivez votre événement..."></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Heure</label>
+                        <input type="time" class="form-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Lieu</label>
+                    <input type="text" class="form-input" placeholder="Ex: Stade Leopold Sedar Senghor">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Type d'événement</label>
+                        <select class="form-select" id="eventType" onchange="changeEventType()">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="sport">Sport</option>
+                            <option value="music">Musique / Concert</option>
+                            <option value="theatre">Théâtre</option>
+                            <option value="festival">Festival</option>
+                            <option value="conference">Conférence</option>
+                            <option value="other">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Capacité totale</label>
+                        <input type="number" class="form-input" id="totalCapacity" placeholder="1000">
+                    </div>
+                </div>
+
+                <!-- NOUVEAU: Section Catégories de Billets -->
+                <div class="ticket-categories-section" style="margin-top: 2rem; padding: 1.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <div style="font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>🎫</span>
+                            <span>Catégories de Billets</span>
+                        </div>
+                        <div class="category-type-selector" id="categoryTypeSelector" style="display: none; gap: 0.5rem; background: var(--dark-tertiary); padding: 0.25rem; border-radius: 10px;">
+                            <button type="button" class="type-btn" data-type="sport" onclick="selectCategoryType('sport')" style="padding: 0.5rem 1rem; background: transparent; border: none; color: var(--text-secondary); font-family: 'Outfit', sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.3s;">Sport</button>
+                            <button type="button" class="type-btn" data-type="music" onclick="selectCategoryType('music')" style="padding: 0.5rem 1rem; background: transparent; border: none; color: var(--text-secondary); font-family: 'Outfit', sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.3s;">Musical</button>
+                        </div>
+                    </div>
+
+                    <div class="alert-info" style="background: rgba(0, 78, 137, 0.1); border: 1px solid rgba(0, 78, 137, 0.3); border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: start; gap: 0.75rem;">
+                        <span style="font-size: 1.25rem;">💡</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem; color: var(--secondary-light);">Nouveau : Prix multiples</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5;">
+                                Ajoutez plusieurs catégories avec des prix différents. Des templates sont disponibles pour événements sportifs et musicaux.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ticketCategoriesList">
+                        <!-- Les catégories seront ajoutées ici dynamiquement -->
+                    </div>
+
+                    <button type="button" class="btn-add-category" onclick="addCategory()" style="background: var(--glass-bg); border: 1px dashed var(--glass-border); color: var(--text-secondary); padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; transition: all 0.3s; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.9rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem;">
+                        <span>➕</span>
+                        <span>Ajouter une catégorie</span>
+                    </button>
+
+                    <div class="category-summary" id="categorySummary" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--dark); border-radius: 10px; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 0.25rem;">Total Catégories</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--primary);" id="totalCategories">0</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 0.25rem;">Capacité Totale</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--primary);" id="totalCategoryCapacity">0</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 0.25rem;">Prix Moyen</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--primary);" id="averagePrice">0 FCFA</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Image de couverture</label>
+                    <input type="file" class="form-input" accept="image/*">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                    <button type="submit" class="btn-primary" style="flex: 1;">
+                        <span>✨</span>
+                        <span>Créer l'événement</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal Functions
+        function openModal() {
+            document.getElementById('createEventModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('createEventModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('createEventModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // ========= NOUVEAU: Gestion des Catégories de Billets =========
+        let categoryCounter = 0;
+        let currentEventType = '';
+
+        // Templates de catégories prédéfinies
+        const categoryTemplates = {
+            sport: [
+                { name: 'Tribune Découverte', price: 6000, capacity: 500 },
+                { name: 'Tribune Couverte', price: 15000, capacity: 300 },
+                { name: 'Annexe Loge', price: 25000, capacity: 100 },
+                { name: 'Loge Officielle', price: 75000, capacity: 50 }
+            ],
+            music: [
+                { name: 'Entrée Standard', price: 5000, capacity: 500 },
+                { name: 'Loge', price: 15000, capacity: 200 },
+                { name: 'VIP Loge', price: 35000, capacity: 100 }
+            ]
+        };
+
+        function changeEventType() {
+            const eventType = document.getElementById('eventType').value;
+            const categorySelector = document.getElementById('categoryTypeSelector');
+            const categoriesList = document.getElementById('ticketCategoriesList');
+            
+            if (eventType === 'sport' || eventType === 'music') {
+                categorySelector.style.display = 'flex';
+                currentEventType = eventType;
+                
+                // Proposer les catégories prédéfinies
+                if (categoriesList.children.length === 0) {
+                    if (confirm(`Voulez-vous utiliser les catégories prédéfinies pour un événement ${eventType === 'sport' ? 'sportif' : 'musical'} ?`)) {
+                        loadPredefinedCategories(eventType);
+                    }
+                }
+            } else {
+                categorySelector.style.display = 'none';
+            }
+        }
+
+        function selectCategoryType(type) {
+            currentEventType = type;
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.style.background = 'transparent';
+                btn.style.color = 'var(--text-secondary)';
+            });
+            event.target.style.background = 'var(--primary)';
+            event.target.style.color = 'white';
+            
+            if (confirm(`Charger les catégories prédéfinies pour événement ${type === 'sport' ? 'sportif' : 'musical'} ?`)) {
+                loadPredefinedCategories(type);
+            }
+        }
+
+        function loadPredefinedCategories(type) {
+            const categoriesList = document.getElementById('ticketCategoriesList');
+            categoriesList.innerHTML = '';
+            categoryCounter = 0;
+            
+            const templates = categoryTemplates[type];
+            templates.forEach(template => {
+                addCategory(template.name, template.price, template.capacity);
+            });
+            
+            updateSummary();
+        }
+
+        function addCategory(name = '', price = '', capacity = '') {
+            const categoriesList = document.getElementById('ticketCategoriesList');
+            const categoryId = `category-${categoryCounter++}`;
+            
+            const categoryHTML = `
+                <div class="category-item" id="${categoryId}" style="background: var(--dark-tertiary); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; transition: border-color 0.3s;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                        <div style="display: flex; flex-direction: column;">
+                            <label style="font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 0.5rem; font-weight: 500;">Nom de la catégorie</label>
+                            <input type="text" name="categoryName[]" 
+                                   placeholder="Ex: Tribune Couverte" 
+                                   value="${name}"
+                                   onchange="updateSummary()" 
+                                   style="background: var(--dark); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: 0.9rem;" required>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label style="font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 0.5rem; font-weight: 500;">Prix (FCFA)</label>
+                            <input type="number" name="categoryPrice[]" 
+                                   placeholder="15000" 
+                                   value="${price}"
+                                   min="0" step="500"
+                                   onchange="updateSummary()" 
+                                   style="background: var(--dark); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: 0.9rem;" required>
+                        </div>
+                        <div style="display: flex; flex-direction: column;">
+                            <label style="font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 0.5rem; font-weight: 500;">Capacité</label>
+                            <input type="number" name="categoryCapacity[]" 
+                                   placeholder="300" 
+                                   value="${capacity}"
+                                   min="1"
+                                   onchange="updateSummary()" 
+                                   style="background: var(--dark); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: 0.9rem;" required>
+                        </div>
+                        <button type="button" onclick="removeCategory('${categoryId}')" title="Supprimer"
+                                style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--error); padding: 0.75rem; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 1.2rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            categoriesList.insertAdjacentHTML('beforeend', categoryHTML);
+            updateSummary();
+        }
+
+        function removeCategory(categoryId) {
+            const category = document.getElementById(categoryId);
+            if (category) {
+                category.remove();
+                updateSummary();
+            }
+        }
+
+        function updateSummary() {
+            const categories = document.querySelectorAll('.category-item');
+            const summary = document.getElementById('categorySummary');
+            
+            if (categories.length === 0) {
+                summary.style.display = 'none';
+                return;
+            }
+            
+            summary.style.display = 'flex';
+            
+            let totalCapacity = 0;
+            let totalRevenue = 0;
+            let validCategories = 0;
+            
+            categories.forEach(cat => {
+                const price = parseFloat(cat.querySelector('input[name="categoryPrice[]"]').value) || 0;
+                const capacity = parseInt(cat.querySelector('input[name="categoryCapacity[]"]').value) || 0;
+                
+                if (price > 0 && capacity > 0) {
+                    totalCapacity += capacity;
+                    totalRevenue += (price * capacity);
+                    validCategories++;
+                }
+            });
+            
+            const averagePrice = validCategories > 0 ? Math.round(totalRevenue / totalCapacity) : 0;
+            
+            document.getElementById('totalCategories').textContent = validCategories;
+            document.getElementById('totalCategoryCapacity').textContent = totalCapacity.toLocaleString();
+            document.getElementById('averagePrice').textContent = averagePrice.toLocaleString() + ' FCFA';
+            
+            // Mettre à jour la capacité totale de l'événement
+            const totalCapacityInput = document.getElementById('totalCapacity');
+            if (totalCapacityInput && !totalCapacityInput.value) {
+                totalCapacityInput.value = totalCapacity;
+            }
+        }
+
+        // Style pour le hover du bouton "Ajouter une catégorie"
+        document.addEventListener('DOMContentLoaded', function() {
+            const addBtn = document.querySelector('.btn-add-category');
+            if (addBtn) {
+                addBtn.addEventListener('mouseenter', function() {
+                    this.style.borderColor = 'var(--primary)';
+                    this.style.color = 'var(--primary)';
+                    this.style.background = 'rgba(255, 107, 53, 0.05)';
+                });
+                addBtn.addEventListener('mouseleave', function() {
+                    this.style.borderColor = 'var(--glass-border)';
+                    this.style.color = 'var(--text-secondary)';
+                    this.style.background = 'var(--glass-bg)';
+                });
+            }
+        });
+
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const gradient = revenueCtx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(255, 107, 53, 0.3)');
+        gradient.addColorStop(1, 'rgba(255, 107, 53, 0)');
+
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                datasets: [{
+                    label: 'Revenus',
+                    data: [285000, 320000, 410000, 380000, 450000, 520000, 490000],
+                    borderColor: '#FF6B35',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#FF6B35',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        padding: 12,
+                        titleColor: '#F8FAFC',
+                        bodyColor: '#94A3B8',
+                        borderColor: 'rgba(255, 107, 53, 0.3)',
+                        borderWidth: 1,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toLocaleString() + ' FCFA';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#64748B',
+                            font: {
+                                family: 'JetBrains Mono',
+                                size: 11
+                            },
+                            callback: function(value) {
+                                return (value / 1000) + 'K';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#64748B',
+                            font: {
+                                family: 'Outfit',
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+
+        // Tickets Doughnut Chart
+        const ticketsCtx = document.getElementById('ticketsChart').getContext('2d');
+        new Chart(ticketsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['VIP', 'Standard', 'Étudiant', 'Gratuit'],
+                datasets: [{
+                    data: [320, 847, 450, 230],
+                    backgroundColor: [
+                        '#FF6B35',
+                        '#004E89',
+                        '#FFC857',
+                        '#10B981'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#94A3B8',
+                            font: {
+                                family: 'Outfit',
+                                size: 13
+                            },
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        padding: 12,
+                        titleColor: '#F8FAFC',
+                        bodyColor: '#94A3B8',
+                        borderColor: 'rgba(255, 107, 53, 0.3)',
+                        borderWidth: 1,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // Animate progress bars on page load
+        window.addEventListener('load', function() {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 500);
+            });
+        });
+
+        // Filter buttons functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Add smooth hover effects
+        document.querySelectorAll('.kpi-card, .chart-card, .nav-item, .action-btn').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+        });
+    </script>
+</body>
+</html>
